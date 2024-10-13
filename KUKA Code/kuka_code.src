@@ -1,0 +1,533 @@
+&ACCESS RVP
+&REL 404
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+&PARAM EDITMASK = *
+DEF KUKA_CODE( )
+
+DECL FRAME AUX_BASE
+DECL FRAME HOME_GRIPPER
+DECL FRAME HOME_MAGNET
+DECL FRAME ROULETTE_BALL_POS
+DECL FRAME CENTER_CUPS
+DECL AXIS HOME_G3
+DECL FRAME CENTER_ROULETTE
+DECL FRAME AUX_CAL
+
+DECL FRAME CUPS[16], DELIVER_CUPS[16]
+DECL FRAME CURR_CUP, CURR_DELIVER_CUP 
+
+DECL FRAME P1, P2, P3, P4, P5, P6, P7, P8
+
+DECL FRAME SPLGETBALL_P1, SPLGETBALL_P2, SPLGETBALL_P3, SPLGETBALL_P4, AUX_P3_C1, AUX_P3_C2, AUX_P3_C3, AUX_P3_C4
+
+;FOLD INI;%{PE}
+  ;FOLD BASISTECH INI
+    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+    INTERRUPT ON 3 
+    BAS (#INITMOV,0 )
+  ;ENDFOLD (BASISTECH INI)
+;FOLD SPOTTECH INI
+USERSPOT(#INIT)
+;ENDFOLD (SPOTTECH INI)
+;FOLD GRIPPERTECH INI
+USER_GRP(0,DUMMY,DUMMY,GDEFAULT)
+;ENDFOLD (GRIPPERTECH INI)
+  ;FOLD USER INI
+    ;Make your modifications here
+
+  ;ENDFOLD (USER INI)
+;ENDFOLD (INI)
+
+$ADVANCE = 0
+
+ALBERTO_INFO.X_OFFSET = 0.0
+ALBERTO_INFO.Y_OFFSET = 0.0
+ALBERTO_INFO.ANGLE_OFFSET = 0.0
+ALBERTO_INFO.COMMAND = 0
+ALBERTO_INFO.CUP_NUM = 0
+ALBERTO_INFO.DELIVER_NUM = 0
+
+
+; release ball spline movs
+P1 = {X -0.57, Y 137.6, Z 102.27, A -92.32, B -8.52,C -91.1}
+P2 = {X 56.34, Y 89.18, Z 95.31, A -92.32, B -8.52, C -91.1}
+P3 = {X 35.95, Y 11.79, Z 95.31, A -92.32, B -8.52,C -91.1}
+P4 = {X -28.66, Y 11.57, Z 95.29, A -92.32, B -8.52,C -91.1}
+P5 = {X -88.08, Y 41.17, Z 165.34, A -92.32, B -8.52,C -91.1}
+P6 = {X -183.26, Y 121.94, Z 233, A -92.32, B -8.52,C -91.1}
+P7 = {X -87.31, Y -7.46, Z 212.22, A -92.32, B -8.52,C -91.1}
+P8 = {X -195.89, Y 85.24, Z 325.16, A -92.32, B -8.52,C -91.1}
+
+
+; Static position where to deliver cups to the user
+DELIVER_CUPS[1] = {X -300, Y 0, Z 300, A 11.38, B 88.9, C -72.2}
+
+
+; Default tools
+$TOOL = TOOL_DATA[6]
+$BASE = BASE_DATA[6]
+
+
+; Turn off the eletromagnet
+$OUT[7] = FALSE
+
+; Start gripper on open position
+$OUT[4] = TRUE
+$OUT[1] = FALSE
+
+$OV_PRO = 10
+
+; INI POS
+HOME_G3 = {AXIS: A1 0, A2 -50.80, A3 81.30, A4 -1.42, A5 58.3, A6 -112.03} 
+PTP HOME_G3 
+
+
+
+; Send robot to START GAME position (take photo with ESPCAM)
+HOME_GRIPPER = {X 0, Y 0, Z 450, A 11.38, B 88.9, C -72.2}
+PTP HOME_GRIPPER
+
+; set magnet home position and rotation
+HOME_MAGNET  = {X 0, Y 0, Z 350, A -92.32, B -8.52, C -91.1}
+
+; current step (case) in program             
+ALBERTO_STEP = 0
+
+
+LOOP
+  SWITCH ALBERTO_INFO.COMMAND
+  
+    CASE 1
+      $OV_PRO = 10
+      $TOOL = TOOL_DATA[6]
+      $BASE = BASE_DATA[6]
+      
+      PTP HOME_GRIPPER
+
+      ALBERTO_STEP = 1
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+    
+    CASE 2
+      $OV_PRO = 10
+      $TOOL = TOOL_DATA[6]
+      $BASE = AUX_BASE
+      
+      PTP HOME_GRIPPER
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+
+
+    CASE 100 ; FIRST ADJUST 
+      $OV_PRO = 10
+      $TOOL = TOOL_DATA[6]
+      $BASE = BASE_DATA[6]
+     
+      ; Send robot from home base to the green ball
+      CENTER_ROULETTE = $POS_ACT
+
+      CENTER_ROULETTE.X = CENTER_ROULETTE.X + ALBERTO_INFO.X_OFFSET ; Add the X offset to the start base point
+      CENTER_ROULETTE.Y = CENTER_ROULETTE.Y + ALBERTO_INFO.Y_OFFSET ; Add the Y offset to the start base point
+
+      PTP CENTER_ROULETTE
+      $OV_PRO=17
+      CENTER_ROULETTE.Z = 198
+      LIN CENTER_ROULETTE 
+
+      ALBERTO_STEP = 100
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+      
+    CASE 101 ; LOOP ADJUST 
+      $OV_PRO = 13
+      $TOOL = TOOL_DATA[6]
+      $BASE = BASE_DATA[6]
+     
+      ; Send robot from home base to the green ball
+      CENTER_ROULETTE = $POS_ACT
+
+      CENTER_ROULETTE.X = CENTER_ROULETTE.X + ALBERTO_INFO.X_OFFSET ; Add the X offset to the start base point
+      CENTER_ROULETTE.Y = CENTER_ROULETTE.Y + ALBERTO_INFO.Y_OFFSET ; Add the Y offset to the start base point
+
+      LIN CENTER_ROULETTE
+
+      ALBERTO_STEP = 101
+ 
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+      
+    CASE 102 ; CALIBRATE 
+      $OV_PRO = 10
+      $TOOL = TOOL_DATA[6]
+      $BASE = $NULLFRAME      
+
+      AUX_CAL = $POS_ACT
+      
+      AUX_BASE = BASE_DATA[6]
+
+      AUX_BASE.X = AUX_CAL.X
+      AUX_BASE.Y = AUX_CAL.Y
+
+      $BASE = AUX_BASE
+      
+      ; Go to new base 0,0
+      CENTER_ROULETTE = HOME_GRIPPER
+      CENTER_ROULETTE.Z = 198
+
+      PTP CENTER_ROULETTE
+
+      ALBERTO_STEP = 102
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+        
+    CASE 103 ; Send eletromagnet tool to new base and release the ball
+      $OV_PRO = 10
+      ; Switch to eletromagnet tool
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[7]
+      
+      ; Go to a position that allows to switch to the eletromagnet tool 
+      PTP {AXIS: A1 -1.9, A2 -51.75, A3 100.65, A4 -9.5, A5 36.7, A6 -20.5}
+
+      PTP HOME_MAGNET
+      $OV_PRO=13
+      ; Send robot to new base
+      HOME_MAGNET.Z = 148
+      LIN HOME_MAGNET
+      
+      $OV_PRO = 15
+
+      ; Created Spline to drop ball
+      SPLINE
+        SPL P1
+        TRIGGER WHEN PATH = -1.0 DELAY = 0 DO $OUT[7] = FALSE
+        SPL P2
+        SPL P3
+        SPL P4
+        SPL P5
+        SPL P6
+      ENDSPLINE
+      
+      $OV_PRO = 10
+
+      ; Send robot HOME after short delay
+      WAIT SEC 1
+      PTP HOME_G3
+
+      ALBERTO_STEP = 103
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+    
+    CASE 104 ; Send gripper tool to detect number (take photo)
+    
+      $OV_PRO = 10
+      ; Switch to gripper tool
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+      
+      PTP CENTER_ROULETTE
+      WAIT SEC 1 
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+      ALBERTO_STEP = 104
+      
+    CASE 105 ; GET CUPS
+      
+      $OV_PRO = 10
+      
+      ; Switch to gripper tool
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+      
+      PTP CENTER_ROULETTE
+      
+      CENTER_CUPS = CENTER_ROULETTE
+      
+      ; adjust angle
+      CENTER_CUPS.A = CENTER_CUPS.A + ALBERTO_INFO.ANGLE_OFFSET 
+      
+      $OV_PRO = 35
+      LIN CENTER_CUPS   
+      
+      ; adjust position
+      CENTER_CUPS.X = CENTER_CUPS.X + ALBERTO_INFO.X_OFFSET
+      CENTER_CUPS.Y = CENTER_CUPS.Y + ALBERTO_INFO.Y_OFFSET
+
+      $OV_PRO = 15
+      LIN CENTER_CUPS
+
+      ; Robot descends to the cup slower 
+      $OV_PRO = 12
+      CENTER_CUPS.Z = 107.2
+      LIN CENTER_CUPS
+      
+      ; Grab cup
+      WAIT SEC 1
+      $OUT[4] = FALSE
+      $OUT[1] = TRUE
+      WAIT SEC 1
+      
+      ; Robot ascends with cup slower
+      $OV_PRO = 15
+      CENTER_CUPS.Z = 198
+      LIN CENTER_CUPS
+      
+      ALBERTO_STEP = 105
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+    
+    CASE 106 ; Robot gives cup to user in place Y
+      $OV_PRO = 12
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+
+      CURR_DELIVER_CUP = DELIVER_CUPS[1]
+           
+      ; Robot goes to user space
+      LIN CURR_DELIVER_CUP
+       
+      ; Robot descends to the user space fast
+      CURR_DELIVER_CUP.Z = 100
+      LIN CURR_DELIVER_CUP
+      
+      ; Robot descends to the user space slowly
+      $OV_PRO = 10
+      CURR_DELIVER_CUP.Z = 35
+      LIN CURR_DELIVER_CUP 
+       
+      ; Release cup
+      WAIT SEC 1
+      $OUT[1] = FALSE
+      $OUT[4] = TRUE 
+      WAIT SEC 1
+   
+      ; Robot ascends from the user space slowly
+      CURR_DELIVER_CUP.Z = 148
+      LIN CURR_DELIVER_CUP
+       
+      $OV_PRO = 10
+      $BASE = BASE_DATA[6]
+      ; Send robot to new base 0,0
+      PTP HOME_GRIPPER
+      
+      ALBERTO_STEP = 106
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+    
+    CASE 107 ; Robot gets the ball and goes home to take new photo (new base calibration)
+      $OV_PRO = 10
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[7]
+
+      ; Send robot with magnet tool to get the ball
+      ROULETTE_BALL_POS = HOME_MAGNET
+
+      ROULETTE_BALL_POS.X = ROULETTE_BALL_POS.X + ALBERTO_INFO.X_OFFSET
+      ROULETTE_BALL_POS.Y = ROULETTE_BALL_POS.Y + ALBERTO_INFO.Y_OFFSET 
+
+      
+      PTP ROULETTE_BALL_POS
+      
+      SPLGETBALL_P1 = ROULETTE_BALL_POS
+      SPLGETBALL_P1.Z = 73
+
+      SPLGETBALL_P2 = ROULETTE_BALL_POS
+      SPLGETBALL_P2.Z = 69
+
+      SPLGETBALL_P3 = ROULETTE_BALL_POS
+      SPLGETBALL_P3.Z = 64
+
+      AUX_P3_C1 = SPLGETBALL_P3
+      AUX_P3_C2 = SPLGETBALL_P3
+      AUX_P3_C3 = SPLGETBALL_P3
+      AUX_P3_C4 = SPLGETBALL_P3
+      
+      ; circle motion
+      AUX_P3_C1.X = SPLGETBALL_P3.X + 3
+      AUX_P3_C2.Y = SPLGETBALL_P3.Y - 3
+      AUX_P3_C3.X = SPLGETBALL_P3.X - 3
+      AUX_P3_C4.Y = SPLGETBALL_P3.Y + 3
+      
+      SPLGETBALL_P4 = ROULETTE_BALL_POS
+      SPLGETBALL_P4.Z = 73
+
+      $OUT[7] = TRUE
+      $OV_PRO = 13
+
+LIN SPLGETBALL_P3
+      
+      $OV_PRO = 20
+      SPLINE
+        ;SLIN SPLGETBALL_P1 
+        ;SLIN SPLGETBALL_P2
+        ;SLIN SPLGETBALL_P3
+        SLIN AUX_P3_C1
+        SCIRC AUX_P3_C2, AUX_P3_C3
+        SPL AUX_P3_C4
+        SLIN SPLGETBALL_P4
+      ENDSPLINE
+      
+      $OV_PRO = 12
+      ROULETTE_BALL_POS.Z = 348
+      LIN ROULETTE_BALL_POS
+      
+      ; Reset everything to start new calibration
+      $TOOL = TOOL_DATA[6]
+      $BASE = BASE_DATA[6]
+      
+      PTP HOME_GRIPPER ; goes to starting base to take new photo
+      
+      ALBERTO_STEP = 107
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+     
+    
+    CASE 110 ; Robot take photo - cup delivery
+      $OV_PRO = 10
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+      
+      CURR_DELIVER_CUP = HOME_GRIPPER
+      
+      CURR_DELIVER_CUP.X = -350
+      CURR_DELIVER_CUP.Y = 10
+      CURR_DELIVER_CUP.Z = 550
+      
+      PTP CURR_DELIVER_CUP
+      
+      ALBERTO_STEP = 110
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+    
+    
+    CASE 111 ; Robot goes to delivery zone
+      $OV_PRO = 12
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+
+      CURR_DELIVER_CUP = $POS_ACT
+      CURR_DELIVER_CUP.X = CURR_DELIVER_CUP.X + ALBERTO_INFO.X_OFFSET
+      CURR_DELIVER_CUP.Y = CURR_DELIVER_CUP.Y + ALBERTO_INFO.Y_OFFSET 
+     
+      LIN CURR_DELIVER_CUP
+     $OV_PRO=15        
+      ; Robot descends to the deivery space 
+      CURR_DELIVER_CUP.Z = 150
+      LIN CURR_DELIVER_CUP
+        
+      ALBERTO_STEP = 111
+
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+      
+      
+   CASE 112 ; Robot adjusts delivery zone
+      $OV_PRO = 15
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+
+      CURR_DELIVER_CUP = $POS_ACT
+      CURR_DELIVER_CUP.X = CURR_DELIVER_CUP.X + ALBERTO_INFO.X_OFFSET
+      CURR_DELIVER_CUP.Y = CURR_DELIVER_CUP.Y + ALBERTO_INFO.Y_OFFSET 
+     
+      LIN CURR_DELIVER_CUP
+             
+      ALBERTO_STEP = 112
+
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+             
+    CASE 113 ; Robot delivers cup
+      $OV_PRO = 12
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+
+      CURR_DELIVER_CUP = $POS_ACT
+      CURR_DELIVER_CUP.X = CURR_DELIVER_CUP.X + ALBERTO_INFO.X_OFFSET
+      CURR_DELIVER_CUP.Y = CURR_DELIVER_CUP.Y + ALBERTO_INFO.Y_OFFSET 
+      
+      LIN CURR_DELIVER_CUP
+      
+      ; Robot descends to the user space slowly
+      $OV_PRO = 25
+      CURR_DELIVER_CUP.Z = 40
+      LIN CURR_DELIVER_CUP 
+       
+      ; Release cup
+      WAIT SEC 1
+      $OUT[1] = FALSE
+      $OUT[4] = TRUE 
+      WAIT SEC 1
+   
+      ; Robot ascends from the user space slowly
+      CURR_DELIVER_CUP.Z = 148
+      LIN CURR_DELIVER_CUP
+       
+      $OV_PRO = 9
+      $BASE = BASE_DATA[6]
+      ; Send robot to new base 0,0
+      PTP HOME_GRIPPER
+      
+      ALBERTO_STEP = 113
+
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+
+    CASE 114 ; Robot toast drink
+      $OV_PRO = 10
+      $BASE = AUX_BASE
+      $TOOL = TOOL_DATA[6]
+      
+      CURR_DELIVER_CUP = HOME_GRIPPER
+      
+      CURR_DELIVER_CUP.X = -350
+      CURR_DELIVER_CUP.Y = 10
+      CURR_DELIVER_CUP.Z = 250
+      
+      PTP CURR_DELIVER_CUP
+      
+      WAIT SEC 1
+      
+      $OV_PRO = 18
+      CURR_DELIVER_CUP.Z = 550
+            
+      LIN CURR_DELIVER_CUP
+      
+      CURR_DELIVER_CUP.A = CURR_DELIVER_CUP.A - 50
+      
+      WAIT SEC 1
+      
+      PTP CURR_DELIVER_CUP
+      
+      ALBERTO_STEP = 114
+      
+      ; Reset the command
+      ALBERTO_INFO.COMMAND = 0
+
+    DEFAULT
+    
+  ENDSWITCH 
+ENDLOOP
+
+
+; End program
+PTP HOME_G3
+
+END

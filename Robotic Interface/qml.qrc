@@ -1,0 +1,55 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/Roleta.jpg</file>
+        <file>qml/main.qml</file>
+        <file>images/kuka.png</file>
+        <file>qml/components/CustomButton.qml</file>
+        <file>qml/NewGame.qml</file>
+        <file>qml/TwoPlayers.qml</file>
+        <file>qml/Players.qml</file>
+        <file>qml/FourPlayers.qml</file>
+        <file>qml/SelectNumbers.qml</file>
+        <file>qml/components/ShotGlass.qml</file>
+        <file>images/cross.png</file>
+        <file>qml/components/Button.qml</file>
+        <file>images/roulette.png</file>
+        <file>images/roulette1.png</file>
+        <file>images/Roulette 2.jpg</file>
+        <file>images/Roulette 3.jpg</file>
+        <file>images/Roulette 4.png</file>
+        <file>qml/components/Roulette.qml</file>
+        <file>images/Chips/Chip 1k.png</file>
+        <file>images/Chips/Chip 1M.png</file>
+        <file>images/Chips/Chip 5.png</file>
+        <file>images/Chips/Chip 10.png</file>
+        <file>images/Chips/Chip 10k.png</file>
+        <file>images/Chips/Chip 50.png</file>
+        <file>images/Chips/Chip 100.png</file>
+        <file>images/Chips/Chip 100k.png</file>
+        <file>images/Chips/Chip 500K.png</file>
+        <file>images/Casino.png</file>
+        <file>images/Alberto Roulette.png</file>
+        <file>qml/components/TableNumbers.qml</file>
+        <file>qml/components/Numbers.qml</file>
+        <file>images/cross2.png</file>
+        <file>images/red.png</file>
+        <file>qml/SelectNumbersShots.qml</file>
+        <file>qml/components/ShotGlassNumbers.qml</file>
+        <file>images/black.png</file>
+        <file>database.txt</file>
+        <file>qml/components/AlbertoRoullete.qml</file>
+        <file>glassRobot.txt</file>
+        <file>randomDatabase.txt</file>
+        <file>images/SoundIcon.png</file>
+        <file>audios/roulette/Alpinista.mp3</file>
+        <file>audios/roulette/Roda.mp3</file>
+        <file>audios/drink/ComaSede.mp3</file>
+        <file>audios/drink/ComoNaoHeiDeSerBebado.mp3</file>
+        <file>audios/drink/JaVisteOCalorQueEsta.mp3</file>
+        <file>audios/drink/PoucaSede.mp3</file>
+        <file>audios/drink/QueSede.mp3</file>
+        <file>audios/ocr/Incrivel.mp3</file>
+        <file>audios/ocr/OCR.mp3</file>
+        <file>audios/intro/PrecoCerto.mp3</file>
+    </qresource>
+</RCC>
